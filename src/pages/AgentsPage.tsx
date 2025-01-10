@@ -1,3 +1,5 @@
+// src/pages/AgentsPage.tsx
+
 import React, { useState } from "react";
 import AgentForm from "../components/AgentForm/AgentForm";
 import AgentList from "../components/AgentList/AgentList";
@@ -7,18 +9,16 @@ import { useAgentsContext } from "../context/AgentsContext";
 function AgentsPage() {
   const { agents } = useAgentsContext();
 
-  // For editing
+  // For controlling "Edit" mode
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
 
-  // For search
+  // For searching by name/email
   const [searchTerm, setSearchTerm] = useState("");
 
-  // When user types in the search bar
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  // Filter the agents by name or email
   const filteredAgents = agents.filter((agent) => {
     const lowerSearch = searchTerm.toLowerCase();
     return (
@@ -27,17 +27,16 @@ function AgentsPage() {
     );
   });
 
-  // Edit logic
   const handleEditClick = (agent: Agent) => {
     setEditingAgent(agent);
   };
 
-  // Called by AgentForm upon success (add/update)
+  // Called by AgentForm after successful Add or Edit
   const handleFormSuccess = () => {
     setEditingAgent(null);
   };
 
-  // Called if the user cancels editing
+  // If user cancels editing
   const handleCancel = () => {
     setEditingAgent(null);
   };
@@ -48,7 +47,7 @@ function AgentsPage() {
 
       {/* Search Bar */}
       <div style={{ marginBottom: "1rem" }}>
-        <label htmlFor="search">Search Agents:</label>{" "}
+        <label htmlFor="search">Search Agents: </label>
         <input
           id="search"
           type="text"
@@ -58,7 +57,7 @@ function AgentsPage() {
         />
       </div>
 
-      {/* Agent Form (Add/Edit) */}
+      {/* Form for adding/editing */}
       <AgentForm
         editingAgent={editingAgent}
         onSuccess={handleFormSuccess}
@@ -67,7 +66,7 @@ function AgentsPage() {
 
       <hr />
 
-      {/* Agent List */}
+      {/* Filtered list of agents */}
       <AgentList agents={filteredAgents} onEditClick={handleEditClick} />
     </div>
   );

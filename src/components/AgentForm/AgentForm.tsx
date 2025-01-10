@@ -34,7 +34,7 @@ function AgentForm({ editingAgent, onSuccess, onCancel }: AgentFormProps) {
     }
   }, [editingAgent]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -46,7 +46,7 @@ function AgentForm({ editingAgent, onSuccess, onCancel }: AgentFormProps) {
         email,
         status,
       };
-      const success = updateAgent(updated);
+      const success = await updateAgent(updated);
       if (!success) {
         setError("Duplicate email found. Please use a different email.");
         return;
@@ -59,7 +59,7 @@ function AgentForm({ editingAgent, onSuccess, onCancel }: AgentFormProps) {
         email,
         status,
       };
-      const success = addAgent(newAgent);
+      const success = await addAgent(newAgent);
       if (!success) {
         setError("Duplicate email found. Please use a different email.");
         return;
@@ -73,7 +73,6 @@ function AgentForm({ editingAgent, onSuccess, onCancel }: AgentFormProps) {
   return (
     <div style={{ marginBottom: "1rem" }}>
       <h2>{editingAgent ? "Edit Agent" : "Add Agent"}</h2>
-
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       <form onSubmit={handleSubmit}>
