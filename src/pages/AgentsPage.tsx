@@ -40,7 +40,7 @@ function AgentsPage() {
       <hr />
 
       {/* 
-        AgentList receives a callback to handle "Edit" button clicks
+        AgentList receives callback to handle "Edit" button clicks
       */}
       <AgentList onEditClick={handleEditClick} />
     </div>
