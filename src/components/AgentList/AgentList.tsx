@@ -1,4 +1,3 @@
-// src/components/AgentList.tsx
 import React from "react";
 import { Agent } from "../../types/Agent";
 import { useAgentsContext } from "../../context/AgentsContext";
@@ -13,8 +12,12 @@ function AgentList({ agents, onEditClick }: AgentListProps) {
   const { deleteAgent } = useAgentsContext();
 
   if (agents.length === 0) {
-    return <p>No agents found. Please add one above or adjust your search.</p>;
+    return <p>No agents found. Try adding one or adjust your search.</p>;
   }
+
+  const handleDelete = async (id: string) => {
+    await deleteAgent(id);
+  };
 
   return (
     <div>
@@ -24,7 +27,7 @@ function AgentList({ agents, onEditClick }: AgentListProps) {
           <li key={agent.id} style={{ marginBottom: "0.5rem" }}>
             <strong>{agent.name}</strong> — {agent.email} — {agent.status}
             {" | "}
-            <button onClick={() => deleteAgent(agent.id)}>Delete</button>
+            <button onClick={() => handleDelete(agent.id)}>Delete</button>
             {" | "}
             <button onClick={() => onEditClick(agent)}>Edit</button>
             {" | "}

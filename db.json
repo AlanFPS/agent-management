@@ -1,0 +1,16 @@
+{
+  "agents": [
+    {
+      "id": "1",
+      "name": "Alan What",
+      "email": "alaanpscavs@gmail.com",
+      "status": "Active"
+    },
+    {
+      "id": "2",
+      "name": "Jane Smith",
+      "email": "jane.smith@gmail.com",
+      "status": "Inactive"
+    }
+  ]
+}

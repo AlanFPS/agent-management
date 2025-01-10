@@ -6,14 +6,13 @@ function AgentDetailsPage() {
   const { id } = useParams();
   const { findAgentById } = useAgentsContext();
 
-  // Attempt to locate the agent by ID
+  // Find agent in local state
   const agent = id ? findAgentById(id) : undefined;
 
   if (!agent) {
     return (
       <div style={{ padding: "1rem" }}>
         <h2>Agent Not Found</h2>
-        <p>Sorry, we couldn’t find an agent with that ID.</p>
         <Link to="/">Back to Agents</Link>
       </div>
     );

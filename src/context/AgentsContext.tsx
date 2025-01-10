@@ -7,45 +7,73 @@ import React, {
 } from "react";
 import { Agent } from "../types/Agent";
 
-const STORAGE_KEY = "agents_data";
+const API_URL = "http://localhost:3000/agents";
 
 interface AgentsContextProps {
   agents: Agent[];
-  addAgent: (agent: Agent) => boolean;
-  updateAgent: (updatedAgent: Agent) => boolean;
-  deleteAgent: (id: string) => void;
+  addAgent: (agent: Agent) => Promise<boolean>;
+  updateAgent: (agent: Agent) => Promise<boolean>;
+  deleteAgent: (id: string) => Promise<void>;
   findAgentById: (id: string) => Agent | undefined;
 }
 
 const AgentsContext = createContext<AgentsContextProps | undefined>(undefined);
 
 export function AgentsProvider({ children }: { children: ReactNode }) {
-  // Load initial data from localStorage
-  const [agents, setAgents] = useState<Agent[]>(() => {
-    const storedAgents = localStorage.getItem(STORAGE_KEY);
-    return storedAgents ? JSON.parse(storedAgents) : [];
-  });
+  // Local state to store the agents fetched from our JSON server
+  const [agents, setAgents] = useState<Agent[]>([]);
 
-  // Whenever agents changes, save to localStorage
+  // Fetch the agents from JSON Server on mount
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(agents));
-  }, [agents]);
+    // GET /agents
+    fetch(API_URL)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to fetch agents");
+        }
+        return res.json();
+      })
+      .then((data: Agent[]) => {
+        setAgents(data);
+      })
+      .catch((error) => {
+        // In a real app, handle error states more gracefully
+        console.error(error);
+      });
+  }, []);
 
-  // Prevent adding duplicate agents by email
-  const addAgent = (agent: Agent) => {
+  // POST /agents
+  const addAgent = async (agent: Agent) => {
+    // Check for duplicate emails before sending to server
     const emailExists = agents.some(
-      (existing) => existing.email.toLowerCase() === agent.email.toLowerCase()
+      (a) => a.email.toLowerCase() === agent.email.toLowerCase()
     );
     if (emailExists) {
-      return false; // Indicate failure
+      return false;
     }
-    setAgents((prev) => [...prev, agent]);
-    return true; // Indicate success
+
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(agent),
+      });
+      if (!response.ok) {
+        return false;
+      }
+      // Server responds with the newly created agent object
+      const createdAgent: Agent = await response.json();
+      setAgents((prev) => [...prev, createdAgent]);
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
   };
 
-  // Update an existing agent by ID, optionally checking for duplicates if needed
-  const updateAgent = (updatedAgent: Agent) => {
-    // If you'd like to enforce unique emails on update as well, check here:
+  // PUT /agents/:id
+  const updateAgent = async (updatedAgent: Agent) => {
+    // Check for duplicates (excluding the agent being updated)
     const emailExists = agents.some(
       (a) =>
         a.id !== updatedAgent.id &&
@@ -54,18 +82,46 @@ export function AgentsProvider({ children }: { children: ReactNode }) {
     if (emailExists) {
       return false;
     }
-    setAgents((prev) =>
-      prev.map((agent) => (agent.id === updatedAgent.id ? updatedAgent : agent))
-    );
-    return true;
+
+    try {
+      const response = await fetch(`${API_URL}/${updatedAgent.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedAgent),
+      });
+      if (!response.ok) {
+        return false;
+      }
+      // Replace the agent in local state if server update is successful
+      setAgents((prev) =>
+        prev.map((agent) =>
+          agent.id === updatedAgent.id ? updatedAgent : agent
+        )
+      );
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
   };
 
-  // Remove an agent from the list
-  const deleteAgent = (id: string) => {
-    setAgents((prev) => prev.filter((agent) => agent.id !== id));
+  // DELETE /agents/:id
+  const deleteAgent = async (id: string) => {
+    try {
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete agent");
+      }
+      // Remove agent from local state
+      setAgents((prev) => prev.filter((agent) => agent.id !== id));
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  // Find an agent by ID (used in the details page)
+  // Locate a single agent in local state by ID (used in details page)
   const findAgentById = (id: string) => {
     return agents.find((agent) => agent.id === id);
   };
@@ -83,7 +139,6 @@ export function AgentsProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Custom hook to consume the context
 export function useAgentsContext() {
   const context = useContext(AgentsContext);
   if (!context) {
