@@ -1,14 +1,14 @@
-// src/components/AgentList.tsx
 import React from "react";
 import { useAgentsContext } from "../../context/AgentsContext";
 import { Agent } from "../../types/Agent";
 
 interface AgentListProps {
+  agents: Agent[]; // Pre-filtered list
   onEditClick: (agent: Agent) => void;
 }
 
-function AgentList({ onEditClick }: AgentListProps) {
-  const { agents, deleteAgent } = useAgentsContext();
+function AgentList({ agents, onEditClick }: AgentListProps) {
+  const { deleteAgent } = useAgentsContext();
 
   if (agents.length === 0) {
     return <p>No agents found. Please add one above!</p>;
