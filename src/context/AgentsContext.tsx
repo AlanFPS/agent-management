@@ -2,49 +2,72 @@ import React, {
   createContext,
   useState,
   useContext,
-  ReactNode,
   useEffect,
+  ReactNode,
 } from "react";
 import { Agent } from "../types/Agent";
 
-// LocalStorage key for persistent data
 const STORAGE_KEY = "agents_data";
 
 interface AgentsContextProps {
   agents: Agent[];
-  addAgent: (agent: Agent) => void;
-  updateAgent: (updatedAgent: Agent) => void;
+  addAgent: (agent: Agent) => boolean;
+  updateAgent: (updatedAgent: Agent) => boolean;
   deleteAgent: (id: string) => void;
+  findAgentById: (id: string) => Agent | undefined;
 }
 
-// Create context
 const AgentsContext = createContext<AgentsContextProps | undefined>(undefined);
 
 export function AgentsProvider({ children }: { children: ReactNode }) {
-  // Initialize state, pulling from localStorage if available
+  // Load initial data from localStorage
   const [agents, setAgents] = useState<Agent[]>(() => {
     const storedAgents = localStorage.getItem(STORAGE_KEY);
     return storedAgents ? JSON.parse(storedAgents) : [];
   });
 
-  // Sync changes to localStorage whenever "agents" changes
+  // Whenever agents changes, save to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(agents));
   }, [agents]);
 
-  // CRUD actions
+  // Prevent adding duplicate agents by email
   const addAgent = (agent: Agent) => {
+    const emailExists = agents.some(
+      (existing) => existing.email.toLowerCase() === agent.email.toLowerCase()
+    );
+    if (emailExists) {
+      return false; // Indicate failure
+    }
     setAgents((prev) => [...prev, agent]);
+    return true; // Indicate success
   };
 
+  // Update an existing agent by ID, optionally checking for duplicates if needed
   const updateAgent = (updatedAgent: Agent) => {
+    // If you'd like to enforce unique emails on update as well, check here:
+    const emailExists = agents.some(
+      (a) =>
+        a.id !== updatedAgent.id &&
+        a.email.toLowerCase() === updatedAgent.email.toLowerCase()
+    );
+    if (emailExists) {
+      return false;
+    }
     setAgents((prev) =>
       prev.map((agent) => (agent.id === updatedAgent.id ? updatedAgent : agent))
     );
+    return true;
   };
 
+  // Remove an agent from the list
   const deleteAgent = (id: string) => {
     setAgents((prev) => prev.filter((agent) => agent.id !== id));
+  };
+
+  // Find an agent by ID (used in the details page)
+  const findAgentById = (id: string) => {
+    return agents.find((agent) => agent.id === id);
   };
 
   const value: AgentsContextProps = {
@@ -52,6 +75,7 @@ export function AgentsProvider({ children }: { children: ReactNode }) {
     addAgent,
     updateAgent,
     deleteAgent,
+    findAgentById,
   };
 
   return (
@@ -59,7 +83,7 @@ export function AgentsProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Custom hook to use AgentsContext
+// Custom hook to consume the context
 export function useAgentsContext() {
   const context = useContext(AgentsContext);
   if (!context) {

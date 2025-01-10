@@ -10,15 +10,15 @@ function AgentsPage() {
   // For editing
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
 
-  // searchTerm local state
+  // For search
   const [searchTerm, setSearchTerm] = useState("");
 
-  // When user types in the search bar, update state
+  // When user types in the search bar
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  // Filter agents by name OR email
+  // Filter the agents by name or email
   const filteredAgents = agents.filter((agent) => {
     const lowerSearch = searchTerm.toLowerCase();
     return (
@@ -27,22 +27,26 @@ function AgentsPage() {
     );
   });
 
-  // Logic
+  // Edit logic
   const handleEditClick = (agent: Agent) => {
     setEditingAgent(agent);
   };
+
+  // Called by AgentForm upon success (add/update)
   const handleFormSuccess = () => {
     setEditingAgent(null);
   };
+
+  // Called if the user cancels editing
   const handleCancel = () => {
     setEditingAgent(null);
   };
 
   return (
-    <div>
+    <div style={{ padding: "1rem" }}>
       <h1>Agents Management</h1>
 
-      {/* Search bar */}
+      {/* Search Bar */}
       <div style={{ marginBottom: "1rem" }}>
         <label htmlFor="search">Search Agents:</label>{" "}
         <input
@@ -63,7 +67,7 @@ function AgentsPage() {
 
       <hr />
 
-      {/* Pass the filtered list and edit callback to AgentList */}
+      {/* Agent List */}
       <AgentList agents={filteredAgents} onEditClick={handleEditClick} />
     </div>
   );

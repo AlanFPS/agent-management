@@ -1,4 +1,3 @@
-// src/components/AgentForm.tsx
 import React, { useState, useEffect } from "react";
 import { v4 as uuid } from "uuid";
 import { useAgentsContext } from "../../context/AgentsContext";
@@ -17,6 +16,7 @@ function AgentForm({ editingAgent, onSuccess, onCancel }: AgentFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"Active" | "Inactive">("Active");
+  const [error, setError] = useState("");
 
   // Whenever editingAgent changes, update form fields with its data (if any)
   useEffect(() => {
@@ -24,47 +24,61 @@ function AgentForm({ editingAgent, onSuccess, onCancel }: AgentFormProps) {
       setName(editingAgent.name);
       setEmail(editingAgent.email);
       setStatus(editingAgent.status);
+      setError("");
     } else {
       // Clear form for "Add" mode
       setName("");
       setEmail("");
       setStatus("Active");
+      setError("");
     }
   }, [editingAgent]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
     if (editingAgent) {
-      // "Edit" mode
+      // Attempt to update existing agent
       const updated: Agent = {
         ...editingAgent,
         name,
         email,
         status,
       };
-      updateAgent(updated);
+      const success = updateAgent(updated);
+      if (!success) {
+        setError("Duplicate email found. Please use a different email.");
+        return;
+      }
     } else {
-      // "Add" mode
+      // Attempt to add new agent
       const newAgent: Agent = {
         id: uuid(),
         name,
         email,
         status,
       };
-      addAgent(newAgent);
+      const success = addAgent(newAgent);
+      if (!success) {
+        setError("Duplicate email found. Please use a different email.");
+        return;
+      }
     }
 
-    // Let the parent component know we're done
+    // If successful, notify parent and clear editing
     onSuccess();
   };
 
   return (
-    <div>
+    <div style={{ marginBottom: "1rem" }}>
       <h2>{editingAgent ? "Edit Agent" : "Add Agent"}</h2>
+
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
       <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="agentName">Name</label>
+        <div style={{ marginBottom: "0.5rem" }}>
+          <label htmlFor="agentName">Name: </label>
           <input
             id="agentName"
             type="text"
@@ -74,8 +88,8 @@ function AgentForm({ editingAgent, onSuccess, onCancel }: AgentFormProps) {
           />
         </div>
 
-        <div>
-          <label htmlFor="agentEmail">Email</label>
+        <div style={{ marginBottom: "0.5rem" }}>
+          <label htmlFor="agentEmail">Email: </label>
           <input
             id="agentEmail"
             type="email"
@@ -85,8 +99,8 @@ function AgentForm({ editingAgent, onSuccess, onCancel }: AgentFormProps) {
           />
         </div>
 
-        <div>
-          <label htmlFor="agentStatus">Status</label>
+        <div style={{ marginBottom: "0.5rem" }}>
+          <label htmlFor="agentStatus">Status: </label>
           <select
             id="agentStatus"
             value={status}
@@ -97,11 +111,10 @@ function AgentForm({ editingAgent, onSuccess, onCancel }: AgentFormProps) {
           </select>
         </div>
 
-        <button type="submit">
+        <button type="submit" style={{ marginRight: "1rem" }}>
           {editingAgent ? "Update Agent" : "Add Agent"}
         </button>
 
-        {/* Show Cancel button only in Edit mode */}
         {editingAgent && (
           <button type="button" onClick={onCancel}>
             Cancel
